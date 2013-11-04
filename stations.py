@@ -23,6 +23,7 @@ class Line:
         self.realtime = True if info['ECHTZEIT'] == '1' else False
         self.id = int(info['LINIEN_ID'])
         self.type = info['VERKEHRSMITTEL']
+        self.last_changed = info['STAND']
         self._stations = None
         self._points = None
 
