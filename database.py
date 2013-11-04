@@ -17,7 +17,6 @@ class Line(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(10))
-    order = Column(Integer)
     realtime = Column(Boolean)
     type = Column(String(10))
     last_changed = Column(DateTime)
@@ -53,7 +52,7 @@ class Stop(Base):
     lat = Column(Float)
     lon = Column(Float)
     station_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
-    station = relation(Station, backref='stops')
+    station = relation(Station)
     section = Column(String(20))
     last_changed = Column(DateTime)
 
