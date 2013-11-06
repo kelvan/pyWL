@@ -6,12 +6,20 @@ point_file = 'wienerlinien-ogd-steige.csv'
 station_file = 'wienerlinien-ogd-haltestellen.csv'
 
 
+class Commune:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+
 class Station:
     def __init__(self, info):
         self.id = int(info['\ufeff"HALTESTELLEN_ID"'])
         self.name = info['NAME']
         self.lat = float(info['WGS84_LAT'])
         self.lon = float(info['WGS84_LON'])
+        self.last_changed = info['STAND']
+        self.commune = Commune(info['GEMEINDE_ID'], info['GEMEINDE'])
 
     def __repr__(self):
         return "%s - %d" % (self.name, self.id)
