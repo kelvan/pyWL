@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class Commune(Base):
     __tablename__ = 'communes'
-    id = Column(Integer, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True)
     name = Column(String(50))
     stations = relationship("Station")
 
@@ -15,7 +15,7 @@ class Commune(Base):
 class Line(Base):
     __tablename__ = 'lines'
 
-    id = Column(Integer, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True)
     name = Column(String(10))
     realtime = Column(Boolean)
     type = Column(String(10))
@@ -25,8 +25,8 @@ class Line(Base):
 class Station(Base):
     __tablename__ = 'stations'
 
-    id = Column(Integer, primary_key=True, nullable=False)
-    name = Column(String(50), unique=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False)
     type = Column(String(10))
     commune_id = Column(Integer, ForeignKey('communes.id'), nullable=False)
     lat = Column(Float)
