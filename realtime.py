@@ -17,6 +17,9 @@ position_option = "rbl"
 
 class Departures(dict):
     def __init__(self, positions, disruptions=None):
+        """ position: rbl as int or iterable
+            disruptions: get disruption info ['short', 'long', 'elevator']
+        """
         self.disruptions = []
         self.last_updated = None
 
@@ -61,13 +64,13 @@ class Departures(dict):
         for stop in j['data']['monitors']:
             prop = stop['locationStop']['properties']
             stopid = prop['attributes']['rbl']
-            self[stopid] = {'name': prop['title'], 'type': prop['type']}
-            self[stopid]['departures'] = []
-#
-#            for line in stop['lines']:
-#                for dep in line['departures']['departure']:
-#                    print(dep)
-#                    self[stopid]['departures'].append(dep['departure'])
+            if not stopid in self:
+                self[stopid] = {'name': prop['title'], 'type': prop['type']}
+                self[stopid]['departures'] = []
+
+            for line in stop['lines']:
+                for dep in line['departures']['departure']:
+                    self[stopid]['departures'].append(dep['departureTime'])
 
         # just for testing
         return j
