@@ -15,6 +15,10 @@ traf_option = "activateTrafficInfo"
 position_option = "rbl"
 
 
+def datify(date_string):
+    return datetime.strptime(date_string, config.datetimeformat)
+
+
 class Departures(dict):
     def __init__(self, positions, disruptions=None):
         """ position: rbl as int or iterable
@@ -58,8 +62,7 @@ class Departures(dict):
         self.last_status = j['message']['value']
         if not self.last_status == 'OK':
             logger.error('error server status: %s', self.last_status)
-        self.last_updated = datetime.strptime(j['message']['serverTime'],
-                                              config.datetimeformat)
+        self.last_updated = datify(j['message']['serverTime'])
 
         for stop in j['data']['monitors']:
             prop = stop['locationStop']['properties']
@@ -70,6 +73,11 @@ class Departures(dict):
 
             for line in stop['lines']:
                 for dep in line['departures']['departure']:
+                    deptime = dep['departureTime']
+                    if 'timePlanned' in deptime:
+                        deptime['timePlanned'] = datify(deptime['timePlanned'])
+                    if 'timeReal' in deptime:
+                        deptime['timeReal'] = datify(deptime['timeReal'])
                     self[stopid]['departures'].append(dep['departureTime'])
 
         # just for testing
