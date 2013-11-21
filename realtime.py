@@ -78,6 +78,9 @@ class Departures(dict):
                         deptime['timePlanned'] = datify(deptime['timePlanned'])
                     if 'timeReal' in deptime:
                         deptime['timeReal'] = datify(deptime['timeReal'])
+                    if 'departures' in line:
+                        del(line['departures'])
+                    deptime['line'] = line
                     self[stopid]['departures'].append(dep['departureTime'])
 
         # just for testing
