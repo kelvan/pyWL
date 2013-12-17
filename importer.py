@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import csv
 from datetime import datetime
 
@@ -37,12 +39,17 @@ def import_commune(cid, name):
         session.add(c)
 
 
+def import_point(info):
+    pass
+
+
+
 def import_station(info):
     s = None
     s2 = session.query(Station).get(info['\ufeff"HALTESTELLEN_ID"'])
     last_changed = datetime.strptime(info['STAND'], dt_format)
 
-    if s2: 
+    if s2:
         if s2.last_changed < last_changed:
             s = s2
     else:
@@ -93,3 +100,8 @@ with open(station_file, 'r') as f:
 
 session.commit()
 session.flush()
+
+with open(point_file, 'r') as f:
+    reader = csv.DictReader(f, delimiter=';')
+    for point in reader:
+        import_point(point)
