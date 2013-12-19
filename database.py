@@ -1,7 +1,9 @@
 import sqlite3
-import geopy
+#import geopy
 
-conn = sqlite3.connect("stations.db")
+import config
+
+conn = sqlite3.connect(config.database)
 c = conn.cursor()
 
 
