@@ -58,7 +58,31 @@ class Base(dict):
         raise NotImplementedError()
 
 
-class Commune(Base):
+class LocationMixIn:
+    @classmethod
+    def get_nearby(cls, lat, lon, distance=0.005):
+        #TODO distance in meters
+        d = distance
+        s = c.execute("""SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
+                      (lat-d, lat+d, lon-d, lon+d)).fetchall()
+        if s:
+            return map(lambda x: cls(*x), s)
+        else:
+            return []
+
+
+class NameMixIn:
+    @classmethod
+    def search_by_name(cls, name):
+        s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
+                      ('%'+name+'%',)).fetchall()
+        if s:
+            return map(lambda x: cls(*x), s)
+        else:
+            return []
+
+
+class Commune(Base, NameMixIn):
     __tablename__ = 'communes'
     __table_definition__ = """CREATE TABLE communes (id INTEGER NOT NULL, 
                                                      name VARCHAR(50), 
@@ -115,20 +139,7 @@ class Line(Base):
             conn.commit()
 
 
-class LocationMixIn:
-    @classmethod
-    def get_nearby(cls, lat, lon, distance=0.005):
-        #TODO distance in meters
-        d = distance
-        s = c.execute("""SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
-                      (lat-d, lat+d, lon-d, lon+d)).fetchall()
-        if s:
-            return map(lambda x: cls(*x), s)
-        else:
-            return []
-
-
-class Station(Base, LocationMixIn):
+class Station(Base, LocationMixIn, NameMixIn):
     __tablename__ = 'stations'
     __table_definition__ = """CREATE TABLE stations (id INTEGER NOT NULL, 
                                                      name VARCHAR(50) NOT NULL, 
@@ -180,18 +191,10 @@ class Station(Base, LocationMixIn):
         r = c.execute("""SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
                       (self['id'],)).fetchall()
         if r:
-            return map(lambda x: Stop(*x), r)
+            return map(lambda x: self.__class__(*x), r)
         else:
             return []
 
-    @classmethod
-    def search(cls, name):
-        s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
-                      ('%'+name+'%',)).fetchall()
-        if s:
-            return map(lambda x: cls(*x), s)
-        else:
-            return []
 
 
 class LineStop(Base):
