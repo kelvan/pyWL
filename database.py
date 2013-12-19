@@ -8,10 +8,33 @@ class Base(dict):
     __tablename__ = None
 
     def __init__(self):
+        self['id'] = None
+        self.connection = conn
+        self.cursor = c
+
         if self.__tablename__ is None:
             raise Exception("Don't use Base class directly")
         if not self.table_exists:
             self.create_table()
+
+    def create_table(self):
+        c.execute(self.__table_definition__)
+
+    @classmethod
+    def get(cls, cid):
+        """ fetch element by id, returns as dict-like object
+        """
+        r = self.cursor.execute("""SELECT * FROM %s WHERE id = ?""" % cls.__tablename__,
+                                (cid,))
+        f = r.fetchone()
+        if f:
+            return cls(*f)
+
+    def delete(self, commit=True):
+        self.cursor.execute("""DELETE FROM %s WHERE id=?""" % self.__tablename__,
+                            (self['id'],))
+        if commit:
+            self.connection.commit()
 
     @property
     def table_exists(self):
@@ -22,70 +45,133 @@ class Base(dict):
                       ('table', self.__tablename__))
         return r.fetchone()[0] > 0
 
-    def save(self):
-        pass
+    def save(self, commit=True):
+        raise NotImplementedError()
 
-    def create_table(self):
-        pass
-
-    def fetch(self):
-        pass
 
 class Commune(Base):
     __tablename__ = 'communes'
+    __table_definition__ = """CREATE TABLE communes (id INTEGER NOT NULL, 
+                                                     name VARCHAR(50), 
+                                                     PRIMARY KEY (id))"""
 
-    def create_table(self):
-        c.execute("""CREATE TABLE communes (
-                       id INTEGER NOT NULL, 
-                       name VARCHAR(50), 
-                       PRIMARY KEY (id))""")
+    def __init__(self, cid, name):
+        super().__init__()
+        self['id'] = cid
+        self['name'] = name
 
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(50))
-#    stations = relationship("Station")
+    def save(self, commit=True):
+        if self['id'] is None:
+            c.execute("""INSERT INTO %s VALUES (?)""" % self.__tablename__, 
+                      (self['name'],))
+        else:
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?, ?)""" % self.__tablename__, 
+                      (self['id'], self['name']))
+
+        if commit:
+            conn.commit()
+
+    def get_stations(self):
+        if self['id'] is None:
+            return False
 
 
 class Line(Base):
     __tablename__ = 'lines'
+    __table_definition__ = """CREATE TABLE lines (id INTEGER NOT NULL,
+                                                  name VARCHAR(10),
+                                                  realtime BOOLEAN,
+                                                  type VARCHAR(10),
+                                                  last_changed DATETIME,
+                                                  PRIMARY KEY (id),
+                                                  CHECK (realtime IN (0, 1)))"""
 
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(10))
-#    realtime = Column(Boolean)
-#    type = Column(String(10))
-#    last_changed = Column(DateTime)
+    def __init__(self, lid, name, realtime, typ, last_changed):
+        super().__init__()
+        self['id'] = lid
+        self['name'] = name
+        self['realtime'] = realtime
+        self['type'] = typ
+        self['last_changed'] = last_changed
+
+    def save(self, commit=True):
+        if self['id'] is None:
+            c.execute("""INSERT INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
+                      (self['name'], self['realtime'], self['typ'], self['last_changed']))
+        else:
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?)""" % self.__tablename__,
+                      (self['id'], self['name'], self['realtime'], self['type'], self['last_changed']))
+
+        if commit:
+            conn.commit()
 
 
 class Station(Base):
     __tablename__ = 'stations'
+    __table_definition__ = """CREATE TABLE stations (id INTEGER NOT NULL, 
+                                                     name VARCHAR(50) NOT NULL, 
+                                                     type VARCHAR(10), 
+                                                     commune_id INTEGER NOT NULL, 
+                                                     lat FLOAT, 
+                                                     lon FLOAT, 
+                                                     last_changed DATETIME, 
+                                                     PRIMARY KEY (id), 
+                                                     FOREIGN KEY(commune_id) REFERENCES communes (id)
+                                                    )"""
 
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(50), nullable=False)
-#    type = Column(String(10))
-#    commune_id = Column(Integer, ForeignKey('communes.id'), nullable=False)
-#    lat = Column(Float)
-#    lon = Column(Float)
-#    last_changed = Column(DateTime)
+    def __init__(self, sid, name, typ, cid, lat, lon, last_changed):
+        super().__init__()
+        self['id'] = sid
+        self['name'] = name
+        self['type'] = typ
+        self['commune_id'] = cid
+        self['lat'] = lat
+        self['lon'] = lon
+        self['last_changed'] = last_changed
 
-#    stops = relationship("Stop")
+    def get_by_commune(self, cid):
+        r = c.execute("""SELECT id, name, commune_id, lat, lon, last_changed FROM %s WHERE commune_id=?""" % self.__tablename__,
+                      (cid,))
+        a = r.fetchall()
+        if a:
+            return map(lambda x: self.__class__(*x), a)
+        else:
+            return []
+
+
+    def save(self, commit=True):
+        if self['id'] is None:
+            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__, 
+                      (self['name'], self['type'], self['commune_id'],
+                       self['lat'], self['lon'],
+                       self['last_changed']))
+        else:
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__, 
+                      (self['id'], self['name'], self['type'],
+                       self['commune_id'], self['lat'], self['lon'],
+                       self['last_changed']))
+
+        if commit:
+            conn.commit()
 
 
 class LineStop(Base):
     __tablename__ = 'lines_stops'
-
-#    line_id = Column(Integer, primary_key=True)
-#    stop_id = Column(Integer, primary_key=True)
-#    direction = Column(String(1))
-#    order = Column(Integer)
+    __table_definition__ = '''CREATE TABLE lines_stops (line_id INTEGER NOT NULL,
+                                                        stop_id INTEGER NOT NULL,
+                                                        direction VARCHAR(1),
+                                                        "order" INTEGER,
+                                                        PRIMARY KEY (line_id, stop_id))
+                           '''
 
 
 class Stop(Base):
     __tablename__ = 'stops'
-
-#    id = Column(Integer, primary_key=True)
-#    lat = Column(Float)
-#    lon = Column(Float)
-#    station_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
-#    station = relation(Station)
-#    section = Column(String(20))
-#    last_changed = Column(DateTime)
-
+    __table_definition__ = """CREATE TABLE stops (id INTEGER NOT NULL,
+                                                  lat FLOAT, lon FLOAT,
+                                                  station_id INTEGER NOT NULL,
+                                                  section VARCHAR(20),
+                                                  last_changed DATETIME,
+                                                  PRIMARY KEY (id),
+                                                  FOREIGN KEY(station_id) REFERENCES stations (id))
+                           """
