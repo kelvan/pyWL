@@ -184,6 +184,15 @@ class Station(Base, LocationMixIn):
         else:
             return []
 
+    @classmethod
+    def search(cls, name):
+        s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
+                      ('%'+name+'%',)).fetchall()
+        if s:
+            return map(lambda x: cls(*x), s)
+        else:
+            return []
+
 
 class LineStop(Base):
     __tablename__ = 'lines_stops'

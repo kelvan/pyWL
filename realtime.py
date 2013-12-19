@@ -1,9 +1,11 @@
 import json
 import requests
 import logging
+import operator
 from datetime import datetime
 
 import config
+from database import *
 
 logger = logging.getLogger("realtime_api")
 
@@ -40,6 +42,11 @@ class Departures(dict):
                     self.disruptions.append(disruption)
                 else:
                     logger.error("invalid disruption type: %s", disruption)
+
+    @classmethod
+    def by_station(cls, station, disruptions=None):
+        rbl = map(operator.itemgetter('id'), Station.get(station).get_stops())
+        return cls(list(rbl), disruptions)
 
     def refresh(self):
         request_url = apiurl
