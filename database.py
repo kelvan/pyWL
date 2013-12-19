@@ -24,7 +24,7 @@ class Base(dict):
     def get(cls, cid):
         """ fetch element by id, returns as dict-like object
         """
-        r = self.cursor.execute("""SELECT * FROM %s WHERE id = ?""" % cls.__tablename__,
+        r = c.execute("""SELECT * FROM %s WHERE id = ?""" % cls.__tablename__,
                                 (cid,))
         f = r.fetchone()
         if f:
@@ -164,10 +164,39 @@ class LineStop(Base):
                                                         PRIMARY KEY (line_id, stop_id))
                            '''
 
+    def __init__(self, lid, sid, direction, order):
+        super().__init__()
+        self['line_id'] = lid
+        self['stop_id'] = sid
+        self['direction'] = direction
+        self['order'] = order
+
+    @classmethod
+    def get(cls, lid, sid):
+        r = self.cursor.execute("""SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
+                                (lid,sid))
+        f = r.fetchone()
+        if f:
+            return cls(*f)
+
+    def delete(self, commit=True):
+        self.cursor.execute("""DELETE FROM %s WHERE line_id=? AND station_id=?""" % self.__tablename__,
+                            (self['line_id'], self['station_id']))
+        if commit:
+            self.connection.commit()
+
+    def save(self, commit=True):
+        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
+                  (self['line_id'], self['stop_id'], self['direction'],
+                   self['order']))
+
+        if commit:
+            conn.commit()
 
 class Stop(Base):
     __tablename__ = 'stops'
     __table_definition__ = """CREATE TABLE stops (id INTEGER NOT NULL,
+                                                  name VARCHAR(50) NOT NULL, 
                                                   lat FLOAT, lon FLOAT,
                                                   station_id INTEGER NOT NULL,
                                                   section VARCHAR(20),
@@ -175,3 +204,37 @@ class Stop(Base):
                                                   PRIMARY KEY (id),
                                                   FOREIGN KEY(station_id) REFERENCES stations (id))
                            """
+
+    def __init__(self, sid, name, lat, lon, station, section, last_changed):
+        super().__init__()
+        self['id'] = sid
+        self['name'] = name
+        self['lat'] = lat
+        self['lon'] = lon
+        if isinstance(station, int):
+            self['station'] = Station.get(station)
+        elif isinstance(station, Station):
+            self['station'] = station
+        else:
+            raise TypeError('station has type {}, has to be Station or int'.format(type(station)))
+        self['section'] = section
+        self['last_changed'] = last_changed
+
+    def save(self, commit=True):
+        if self['id'] is None:
+            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
+                      (self['name'], self['lat'], self['lon'], self['station']['id'],
+                       self['section'], self['last_changed']))
+        else:
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
+                      (self['id'], self['name'], self['lat'], self['lon'],
+                       self['station']['id'], self['section'], self['last_changed']))
+        if commit:
+            conn.commit()
+
+    def connect_line(self, lid, direction, order, commit=True):
+        ls = LineStop(lid, self['id'], direction, order)
+        ls.save(commit)
+
+    def disconnect_line(self, lid, commit=True):
+        LineStop.get(lid).delete(commit)

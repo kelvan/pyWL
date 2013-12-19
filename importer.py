@@ -7,7 +7,7 @@ import stations
 from database import *
 
 line_file = 'wienerlinien-ogd-linien.csv'
-point_file = 'wienerlinien-ogd-steige.csv'
+stop_file = 'wienerlinien-ogd-steige.csv'
 station_file = 'wienerlinien-ogd-haltestellen.csv'
 
 dt_format = "%Y-%m-%d %H:%M:%S"
@@ -18,9 +18,19 @@ def import_commune(cid, name, commit=False):
     c.save(commit)
 
 
-def import_point(info):
-    pass
+def import_stop(info, commit=False):
+    last_changed = datetime.strptime(info['STAND'], dt_format)
+    s = Stop(info['RBL_NUMMER'], info['STEIG'], info['STEIG_WGS84_LAT'], info['STEIG_WGS84_LON'],
+             int(info['FK_HALTESTELLEN_ID']), info['BEREICH'], last_changed)
+    if info['RBL_NUMMER'].isdigit():
+        s.save(commit)
+    else:
+        print('Skip RBL: {}'.format(info['RBL_NUMMER']))
 
+def import_stop_line(info, commit=False):
+    s = Stop.get(info['RBL_NUMMER'])
+    s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'], info['REIHENFOLGE'],
+                   commit)
 
 def import_station(info, commit=False):
     last_changed = datetime.strptime(info['STAND'], dt_format)
@@ -48,11 +58,19 @@ conn.commit()
 with open(station_file, 'r') as f:
     reader = csv.DictReader(f, delimiter=';')
     for station in reader:
-        import_station(station)
+        import_station(station, commit=False)
 
 conn.commit()
 
-#with open(point_file, 'r') as f:
-#    reader = csv.DictReader(f, delimiter=';')
-#    for point in reader:
-#        import_point(point)
+with open(stop_file, 'r') as f:
+    reader = csv.DictReader(f, delimiter=';')
+    for stop in reader:
+        import_stop(stop, commit=False)
+
+    conn.commit()
+
+    reader = csv.DictReader(f, delimiter=';')
+    for stop in reader:
+        import_stop_line(stop, commit=False)
+
+conn.commit()
