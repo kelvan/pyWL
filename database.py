@@ -31,6 +31,14 @@ class Base(dict):
         if f:
             return cls(*f)
 
+    @classmethod
+    def all(cls):
+        r = c.execute("""SELECT * FROM %s""" % cls.__tablename__).fetchall()
+        if r:
+            return map(lambda x: cls(*x), r)
+        else:
+            return []
+
     def delete(self, commit=True):
         self.cursor.execute("""DELETE FROM %s WHERE id=?""" % self.__tablename__,
                             (self['id'],))
