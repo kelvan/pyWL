@@ -1,4 +1,5 @@
 import sqlite3
+import geopy
 
 conn = sqlite3.connect("stations.db")
 c = conn.cursor()
@@ -106,7 +107,20 @@ class Line(Base):
             conn.commit()
 
 
-class Station(Base):
+class LocationMixIn:
+    @classmethod
+    def get_nearby(cls, lat, lon, distance=0.005):
+        #TODO distance in meters
+        d = distance
+        s = c.execute("""SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
+                      (lat-d, lat+d, lon-d, lon+d)).fetchall()
+        if s:
+            return map(lambda x: cls(*x), s)
+        else:
+            return []
+
+
+class Station(Base, LocationMixIn):
     __tablename__ = 'stations'
     __table_definition__ = """CREATE TABLE stations (id INTEGER NOT NULL, 
                                                      name VARCHAR(50) NOT NULL, 
@@ -154,6 +168,14 @@ class Station(Base):
         if commit:
             conn.commit()
 
+    def get_stops(self):
+        r = c.execute("""SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
+                      (self['id'],)).fetchall()
+        if r:
+            return map(lambda x: Stop(*x), r)
+        else:
+            return []
+
 
 class LineStop(Base):
     __tablename__ = 'lines_stops'
@@ -193,7 +215,7 @@ class LineStop(Base):
         if commit:
             conn.commit()
 
-class Stop(Base):
+class Stop(Base, LocationMixIn):
     __tablename__ = 'stops'
     __table_definition__ = """CREATE TABLE stops (id INTEGER NOT NULL,
                                                   name VARCHAR(50) NOT NULL, 
@@ -238,3 +260,4 @@ class Stop(Base):
 
     def disconnect_line(self, lid, commit=True):
         LineStop.get(lid).delete(commit)
+
