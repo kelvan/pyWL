@@ -193,7 +193,7 @@ class Station(Base, LocationMixIn, NameMixIn):
         r = c.execute("""SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
                       (self['id'],)).fetchall()
         if r:
-            return map(lambda x: self.__class__(*x), r)
+            return map(lambda x: Stop(*x), r)
         else:
             return []
 
