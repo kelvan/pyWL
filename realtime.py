@@ -44,7 +44,7 @@ class Departures(dict):
                     logger.error("invalid disruption type: %s", disruption)
 
     @classmethod
-    def by_station(cls, station, disruptions=None):
+    def get_by_station(cls, station, disruptions=None):
         if isinstance(station, Station):
             station = station['id']
         rbl = map(operator.itemgetter('id'), Station.get(station).get_stops())
@@ -53,7 +53,7 @@ class Departures(dict):
         return c
 
     @classmethod
-    def by_stops(cls, stops, disruptions=None):
+    def get_by_stops(cls, stops, disruptions=None):
         c = cls(stops, disruptions)
         c.refresh()
         return c
