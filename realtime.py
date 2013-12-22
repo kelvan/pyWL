@@ -45,8 +45,18 @@ class Departures(dict):
 
     @classmethod
     def by_station(cls, station, disruptions=None):
+        if isinstance(station, Station):
+            station = station['id']
         rbl = map(operator.itemgetter('id'), Station.get(station).get_stops())
-        return cls(list(rbl), disruptions)
+        c = cls(list(rbl), disruptions)
+        c.refresh()
+        return c
+
+    @classmethod
+    def by_stops(cls, stops, disruptions=None):
+        c = cls(stops, disruptions)
+        c.refresh()
+        return c
 
     def refresh(self):
         request_url = apiurl
