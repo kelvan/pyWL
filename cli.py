@@ -5,9 +5,28 @@ import sys
 
 from database import Station
 from realtime import Departures
+import argparse
 
-rbl = []
-for st in Station.search_by_name(sys.argv[1]):
-    rbl += list(st.get_stops())
+parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
+parser.add_argument(metavar='station name', dest='name')
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('-s', '--search', action='store_true',
+                    help='search station by name', dest='search')
+group.add_argument('-d', '--departures', action='store_true',
+                    help='show departures', dest='deps')
 
-print(Departures.get_by_stops(rbl))
+args = parser.parse_args()
+
+stations = Station.search_by_name(args.name)
+
+if args.search:
+    for station in map(lambda x: x['name'], stations):
+        print(station)
+
+if args.deps:
+    rbl = []
+    for st in stations:
+        rbl += list(st.get_stops())
+
+    deps = Departures.get_by_stops(rbl)
+    print(('\n'+'#'*79).join(map(str, deps.values())))
