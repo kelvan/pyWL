@@ -164,12 +164,13 @@ class Station(Base, LocationMixIn, NameMixIn):
         self['lon'] = lon
         self['last_changed'] = last_changed
 
-    def get_by_commune(self, cid):
-        r = c.execute("""SELECT id, name, commune_id, lat, lon, last_changed FROM %s WHERE commune_id=?""" % self.__tablename__,
+    @classmethod
+    def get_by_commune(cls, cid):
+        r = c.execute("""SELECT id, name, commune_id, lat, lon, last_changed FROM %s WHERE commune_id=?""" % cls.__tablename__,
                       (cid,))
         a = r.fetchall()
         if a:
-            return map(lambda x: self.__class__(*x), a)
+            return map(lambda x: cls(*x), a)
         else:
             return []
 
@@ -196,7 +197,6 @@ class Station(Base, LocationMixIn, NameMixIn):
             return map(lambda x: Stop(*x), r)
         else:
             return []
-
 
 
 class LineStop(Base):
@@ -282,4 +282,3 @@ class Stop(Base, LocationMixIn):
 
     def disconnect_line(self, lid, commit=True):
         LineStop.get(lid).delete(commit)
-

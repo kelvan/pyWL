@@ -85,9 +85,10 @@ class Departures(dict):
         for stop in j['data']['monitors']:
             prop = stop['locationStop']['properties']
             stopid = prop['attributes']['rbl']
-            if not stopid in self:
-                self[stopid] = {'name': prop['title'], 'type': prop['type']}
-                self[stopid]['departures'] = []
+            station = Stop.get(stopid)['station']['name']
+            if not station in self:
+                self[station] = {'name': prop['title'], 'type': prop['type']}
+                self[station]['departures'] = []
 
             for line in stop['lines']:
                 for dep in line['departures']['departure']:
@@ -99,7 +100,8 @@ class Departures(dict):
                     if 'departures' in line:
                         del(line['departures'])
                     deptime['line'] = line
-                    self[stopid]['departures'].append(dep['departureTime'])
+                    self[station]['departures'].append(dep['departureTime'])
+
 
         # just for testing
         return j
