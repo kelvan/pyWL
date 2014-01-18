@@ -7,6 +7,8 @@ from database import Station
 from realtime import Departures
 import argparse
 
+from textformat import *
+
 parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
 parser.add_argument(metavar='station name', dest='name')
 group = parser.add_mutually_exclusive_group(required=True)
@@ -29,4 +31,6 @@ if args.deps:
         rbl += list(st.get_stops())
 
     deps = Departures.get_by_stops(rbl)
-    print(('\n'+'#'*79).join(map(str, deps.values())))
+    for d in map(str, deps.values()):
+        print(d)
+        print(inblue('#'*79))
