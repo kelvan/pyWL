@@ -3,7 +3,6 @@
 import csv
 from datetime import datetime
 
-import stations
 from database import *
 
 line_file = 'wienerlinien-ogd-linien.csv'
