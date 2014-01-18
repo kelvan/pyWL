@@ -1,4 +1,3 @@
-import json
 import requests
 import logging
 import operator
@@ -76,7 +75,7 @@ class Departures(dict):
         if not r.status_code == 200:
             logger.error('unable to fetch data, statuscode: %d', r.status_code)
 
-        j = json.loads(r.text)
+        j = r.json()
 
         self.last_status = j['message']['value']
         if not self.last_status == 'OK':
