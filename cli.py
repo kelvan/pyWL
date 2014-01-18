@@ -31,6 +31,7 @@ if args.deps:
         rbl += list(st.get_stops())
 
     deps = Departures.get_by_stops(rbl)
+    print(inred(args.name))
     for d in map(str, deps.values()):
         print(d)
         print(inblue('#'*79))
