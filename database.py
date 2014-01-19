@@ -75,6 +75,14 @@ class LocationMixIn:
 
 class NameMixIn:
     @classmethod
+    def get_by_name(cls, name):
+        r = c.execute("""SELECT * FROM %s WHERE name = ?""" % cls.__tablename__,
+                                (name,))
+        f = r.fetchone()
+        if f:
+            return cls(*f)
+
+    @classmethod
     def search_by_name(cls, name):
         s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
                       ('%'+name+'%',)).fetchall()
@@ -111,7 +119,7 @@ class Commune(Base, NameMixIn):
             return False
 
 
-class Line(Base):
+class Line(Base, NameMixIn):
     __tablename__ = 'lines'
     __table_definition__ = """CREATE TABLE lines (id INTEGER NOT NULL,
                                                   name VARCHAR(10),
@@ -139,6 +147,27 @@ class Line(Base):
 
         if commit:
             conn.commit()
+
+    def get_stations(self):
+        if self['id'] is None:
+            return False
+
+        sql = '''SELECT {0}.*,direction FROM {0} 
+                 JOIN {1} ON {0}.id={1}.station_id 
+                 JOIN {2} ON {2}.stop_id={1}.id
+                 WHERE {2}.line_id=?
+                 ORDER BY direction, "order"
+              '''
+
+        r = c.execute(sql.format(Station.__tablename__, Stop.__tablename__, LineStop.__tablename__),
+                      (self['id'],)).fetchall()
+        if r:
+            h = [Station(*x[:-1]) for x in filter(lambda x: x[-1]=='H', r)]
+            r = [Station(*x[:-1]) for x in filter(lambda x: x[-1]=='R', r)]
+
+            return (h, r)
+        else:
+            return ([], [])
 
 
 class Station(Base, LocationMixIn, NameMixIn):
@@ -194,7 +223,7 @@ class Station(Base, LocationMixIn, NameMixIn):
         r = c.execute("""SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
                       (self['id'],)).fetchall()
         if r:
-            return map(lambda x: Stop(*x), r)
+            return [Stop(*x) for x in r]
         else:
             return []
 
@@ -282,3 +311,6 @@ class Stop(Base, LocationMixIn):
 
     def disconnect_line(self, lid, commit=True):
         LineStop.get(lid).delete(commit)
+
+    def get_station(self):
+        return Station(self['station_id'])

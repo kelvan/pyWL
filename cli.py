@@ -5,7 +5,7 @@ import sys
 from operator import itemgetter
 
 from realtime import Departures
-from database import Station
+from database import Station, Line
 from textformat import *
 
 parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
@@ -15,6 +15,8 @@ group.add_argument('-s', '--search', action='store_true',
                     help='search station by name', dest='search')
 group.add_argument('-d', '--departures', action='store_true',
                     help='show departures', dest='deps')
+group.add_argument('-l', '--line', action='store_true',
+                    help='show stations', dest='line')
 
 args = parser.parse_args()
 
@@ -24,6 +26,30 @@ if args.search:
     for station in map(lambda x: x['name'], stations):
         print(station)
 
+if args.line:
+    name = args.name.upper()
+    l = Line.get_by_name(name)
+
+    if l is None:
+        s = Line.search_by_name(name)
+        print('Line not found')
+        if s:
+            print('Did you mean:')
+            for line in s:
+                print(line['name'])
+        sys.exit(1)
+    else:
+        i = 1
+        for direction in l.get_stations():
+            print()
+            print('-'*12)
+            print(inred('Direction:'), i)
+            print('-'*12)
+            print()
+            i += 1
+            for station in direction:
+                print(station['name'])
+
 if args.deps:
     rbl = []
     for st in stations:
@@ -32,6 +58,7 @@ if args.deps:
     deps = Departures.get_by_stops(rbl)
 
     for station in sorted(deps.values(), key=itemgetter('name')):
+        print()
         print('='*len(station['name']))
         print(ingreen(station['name']))
         print('='*len(station['name']))
