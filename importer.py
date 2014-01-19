@@ -18,18 +18,23 @@ def import_commune(cid, name, commit=False):
 
 
 def import_stop(info, commit=False):
+    rbl = info['RBL_NUMMER']
     last_changed = datetime.strptime(info['STAND'], dt_format)
     s = Stop(info['RBL_NUMMER'], info['STEIG'], info['STEIG_WGS84_LAT'], info['STEIG_WGS84_LON'],
              int(info['FK_HALTESTELLEN_ID']), info['BEREICH'], last_changed)
-    if info['RBL_NUMMER'].isdigit():
+    if rbl.isdigit():
         s.save(commit)
-    else:
-        print('Skip RBL: {}'.format(info['RBL_NUMMER']))
+    elif rbl:
+        print('Skip RBL: {}'.format(rbl))
 
 def import_stop_line(info, commit=False):
-    s = Stop.get(info['RBL_NUMMER'])
-    s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'], info['REIHENFOLGE'],
+    rbl = info['RBL_NUMMER']
+    s = Stop.get(rbl)
+    if s:
+        s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'], info['REIHENFOLGE'],
                    commit)
+    elif rbl:
+        print('Stop not found:', rbl)
 
 def import_station(info, commit=False):
     last_changed = datetime.strptime(info['STAND'], dt_format)
@@ -68,6 +73,7 @@ with open(stop_file, 'r') as f:
 
     conn.commit()
 
+with open(stop_file, 'r') as f:
     reader = csv.DictReader(f, delimiter=';')
     for stop in reader:
         import_stop_line(stop, commit=False)
