@@ -108,4 +108,4 @@ class Departures(dict):
                     self[station_name]['departures'].append(deptime)
 
         # just for testing
-        return j
+        #return j

@@ -2,11 +2,10 @@
 
 import argparse
 import sys
+from operator import itemgetter
 
-from database import Station
 from realtime import Departures
-import argparse
-
+from database import Station
 from textformat import *
 
 parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
@@ -31,7 +30,18 @@ if args.deps:
         rbl += list(st.get_stops())
 
     deps = Departures.get_by_stops(rbl)
-    print(inred(args.name))
-    for d in map(str, deps.values()):
-        print(d)
-        print(inblue('#'*79))
+
+    for station in sorted(deps.values(), key=itemgetter('name')):
+        print('='*len(station['name']))
+        print(ingreen(station['name']))
+        print('='*len(station['name']))
+
+        for departure in sorted(station['departures'], key=itemgetter('countdown')):
+            dep_text = departure['line']['name'].ljust(6)
+            dep_text += departure['line']['towards'].ljust(20)
+            if departure['line']['barrierFree']:
+                dep_text += inblue(str(departure['countdown']).rjust(4))
+            else:
+                dep_text += inred(str(departure['countdown']).rjust(4))
+
+            print(dep_text)
