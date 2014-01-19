@@ -41,7 +41,7 @@ class ParsingTestCase(unittest.TestCase):
         d.refresh()
 
         self.assertIn('Karlsplatz', d.keys(), inred('Stationname not found'))
-        self.assertEqual(22, len(d.departures), inred('wrong departure count'))
+        self.assertEqual(22, len(d['Karlsplatz']['departures']), inred('wrong departure count'))
 
     def testParsingMultipleStations(self):
         realtime.requests.get = requests_get_stub(self.multi_station_json, 200)
