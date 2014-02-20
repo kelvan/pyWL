@@ -49,9 +49,9 @@ class Base(dict):
 
     @property
     def table_exists(self):
-        r = c.execute("""SELECT COUNT(*) 
+        r = c.execute("""SELECT COUNT(*)
                            FROM sqlite_master
-                           WHERE type=? AND 
+                           WHERE type=? AND
                                  name=?""",
                       ('table', self.__tablename__))
         return r.fetchone()[0] > 0
@@ -94,8 +94,8 @@ class NameMixIn:
 
 class Commune(Base, NameMixIn):
     __tablename__ = 'communes'
-    __table_definition__ = """CREATE TABLE communes (id INTEGER NOT NULL, 
-                                                     name VARCHAR(50), 
+    __table_definition__ = """CREATE TABLE communes (id INTEGER NOT NULL,
+                                                     name VARCHAR(50),
                                                      PRIMARY KEY (id))"""
 
     def __init__(self, cid, name):
@@ -105,10 +105,10 @@ class Commune(Base, NameMixIn):
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?)""" % self.__tablename__, 
+            c.execute("""INSERT INTO %s VALUES (?)""" % self.__tablename__,
                       (self['name'],))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?, ?)""" % self.__tablename__, 
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?, ?)""" % self.__tablename__,
                       (self['id'], self['name']))
 
         if commit:
@@ -152,8 +152,8 @@ class Line(Base, NameMixIn):
         if self['id'] is None:
             return False
 
-        sql = '''SELECT {0}.*,direction FROM {0} 
-                 JOIN {1} ON {0}.id={1}.station_id 
+        sql = '''SELECT {0}.*,direction FROM {0}
+                 JOIN {1} ON {0}.id={1}.station_id
                  JOIN {2} ON {2}.stop_id={1}.id
                  WHERE {2}.line_id=?
                  ORDER BY direction, "order"
@@ -172,14 +172,14 @@ class Line(Base, NameMixIn):
 
 class Station(Base, LocationMixIn, NameMixIn):
     __tablename__ = 'stations'
-    __table_definition__ = """CREATE TABLE stations (id INTEGER NOT NULL, 
-                                                     name VARCHAR(50) NOT NULL, 
-                                                     type VARCHAR(10), 
-                                                     commune_id INTEGER NOT NULL, 
-                                                     lat FLOAT, 
-                                                     lon FLOAT, 
-                                                     last_changed DATETIME, 
-                                                     PRIMARY KEY (id), 
+    __table_definition__ = """CREATE TABLE stations (id INTEGER NOT NULL,
+                                                     name VARCHAR(50) NOT NULL,
+                                                     type VARCHAR(10),
+                                                     commune_id INTEGER NOT NULL,
+                                                     lat FLOAT,
+                                                     lon FLOAT,
+                                                     last_changed DATETIME,
+                                                     PRIMARY KEY (id),
                                                      FOREIGN KEY(commune_id) REFERENCES communes (id)
                                                     )"""
 
@@ -206,12 +206,12 @@ class Station(Base, LocationMixIn, NameMixIn):
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__, 
+            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
                       (self['name'], self['type'], self['commune_id'],
                        self['lat'], self['lon'],
                        self['last_changed']))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__, 
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
                       (self['id'], self['name'], self['type'],
                        self['commune_id'], self['lat'], self['lon'],
                        self['last_changed']))
@@ -226,6 +226,21 @@ class Station(Base, LocationMixIn, NameMixIn):
             return [Stop(*x) for x in r]
         else:
             return []
+
+    def get_lines(self):
+        sql = """SELECT DISTINCT lines.name
+                     FROM stations
+                        JOIN stops
+                            ON stations.id=station_id
+                        JOIN lines_stops
+                            ON lines_stops.stop_id=stops.id
+                        JOIN lines
+                            ON lines.id=line_id
+                     WHERE stations.id=?
+                     ORDER BY lines.name"""
+        r = self.cursor.execute(sql, (self['id'],))
+        f = r.fetchall()
+        return [l[0] for l in f]
 
 
 class LineStop(Base):
@@ -269,7 +284,7 @@ class LineStop(Base):
 class Stop(Base, LocationMixIn):
     __tablename__ = 'stops'
     __table_definition__ = """CREATE TABLE stops (id INTEGER NOT NULL,
-                                                  name VARCHAR(50) NOT NULL, 
+                                                  name VARCHAR(50) NOT NULL,
                                                   lat FLOAT, lon FLOAT,
                                                   station_id INTEGER NOT NULL,
                                                   section VARCHAR(20),

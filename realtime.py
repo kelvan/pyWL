@@ -63,6 +63,8 @@ class Departures(dict):
         request_url = apiurl
 
         for position in self.postitions:
+            if isinstance(position, Stop):
+                position = position['id']
             request_url += "&%s=%d" % (position_option, position)
 
         for disruption in self.disruptions:
