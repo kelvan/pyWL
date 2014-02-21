@@ -228,7 +228,7 @@ class Station(Base, LocationMixIn, NameMixIn):
             return []
 
     def get_lines(self):
-        sql = """SELECT DISTINCT lines.name
+        sql = """SELECT DISTINCT lines.*
                      FROM stations
                         JOIN stops
                             ON stations.id=station_id
@@ -240,7 +240,7 @@ class Station(Base, LocationMixIn, NameMixIn):
                      ORDER BY lines.name"""
         r = self.cursor.execute(sql, (self['id'],))
         f = r.fetchall()
-        return [l[0] for l in f]
+        return [Line(*l) for l in f]
 
 
 class LineStop(Base):
