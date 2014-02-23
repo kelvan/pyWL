@@ -27,6 +27,7 @@ def import_stop(info, commit=False):
     elif rbl:
         print('Skip RBL: {}'.format(rbl))
 
+
 def import_stop_line(info, commit=False):
     rbl = info['RBL_NUMMER']
     s = Stop.get(rbl)
@@ -36,12 +37,13 @@ def import_stop_line(info, commit=False):
     elif rbl:
         print('Stop not found:', rbl)
 
+
 def import_station(info, commit=False):
     last_changed = datetime.strptime(info['STAND'], dt_format)
     import_commune(info['GEMEINDE_ID'], info['GEMEINDE'])
-    s = Station((info['\ufeff"HALTESTELLEN_ID"']), info['NAME'], info['TYP'],
-                info['GEMEINDE_ID'], float(info['WGS84_LAT']),
-                float(info['WGS84_LON']), last_changed)
+    s = Station((info['HALTESTELLEN_ID']), info['NAME'], info['TYP'],
+            info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
+            float(info['WGS84_LON'] or '0'), last_changed)
     s.save(commit)
 
 
