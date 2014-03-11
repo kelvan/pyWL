@@ -20,7 +20,7 @@ group.add_argument('-l', '--line', action='store_true',
 
 args = parser.parse_args()
 
-stations = Station.search_by_name(args.name)
+stations = Station.search_by_name(args.name, weight='line_count')
 
 if args.search:
     for station in map(lambda x: x['name'], stations):

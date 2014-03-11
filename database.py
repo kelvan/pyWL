@@ -1,4 +1,5 @@
 import sqlite3
+from operator import attrgetter, itemgetter
 #import geopy
 
 import config
@@ -83,15 +84,23 @@ class NameMixIn:
             return cls(*f)
 
     @classmethod
-    def search_by_name(cls, name, exact=False):
+    def search_by_name(cls, name, exact=False, weight=None):
         if exact:
             s = c.execute("""SELECT * FROM %s WHERE name == ? COLLATE NOCASE""" % cls.__tablename__,
                           (name,)).fetchall()
         else:
             s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
                           ('%'+name+'%',)).fetchall()
+
         if s:
-            return map(lambda x: cls(*x), s)
+            result = [cls(*x) for x in s]
+            if weight:
+                if weight in result[0]:
+                    result = sorted(result, key=itemgetter(weight), reverse=True)
+                elif hasattr(result[0], weight):
+                    result = sorted(result, key=attrgetter(weight), reverse=True)
+
+            return result
         else:
             return []
 
@@ -245,6 +254,10 @@ class Station(Base, LocationMixIn, NameMixIn):
         r = self.cursor.execute(sql, (self['id'],))
         f = r.fetchall()
         return [Line(*l) for l in f]
+
+    @property
+    def line_count(self):
+        return len(self.get_lines())
 
 
 class LineStop(Base):
