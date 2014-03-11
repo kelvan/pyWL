@@ -83,9 +83,13 @@ class NameMixIn:
             return cls(*f)
 
     @classmethod
-    def search_by_name(cls, name):
-        s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
-                      ('%'+name+'%',)).fetchall()
+    def search_by_name(cls, name, exact=False):
+        if exact:
+            s = c.execute("""SELECT * FROM %s WHERE name == ? COLLATE NOCASE""" % cls.__tablename__,
+                          (name,)).fetchall()
+        else:
+            s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
+                          ('%'+name+'%',)).fetchall()
         if s:
             return map(lambda x: cls(*x), s)
         else:
