@@ -1,6 +1,6 @@
 import os
 
-from key import senderid_dev
+from pyWL.key import senderid_dev
 
 proj_dir = os.path.dirname(__file__)
 

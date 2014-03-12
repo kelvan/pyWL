@@ -3,7 +3,7 @@
 import csv
 from datetime import datetime
 
-from database import *
+from pyWL.database import *
 
 line_file = 'wienerlinien-ogd-linien.csv'
 stop_file = 'wienerlinien-ogd-steige.csv'

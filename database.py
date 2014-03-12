@@ -2,7 +2,7 @@ import sqlite3
 from operator import attrgetter, itemgetter
 #import geopy
 
-import config
+from pyWL import config
 
 conn = sqlite3.connect(config.database)
 c = conn.cursor()

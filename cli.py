@@ -4,9 +4,9 @@ import argparse
 import sys
 from operator import itemgetter
 
-from realtime import Departures
-from database import Station, Line
-from textformat import *
+from pyWL.realtime import Departures
+from pyWL.database import Station, Line
+from pyWL.textformat import *
 
 parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
 parser.add_argument(metavar='station name', dest='name')

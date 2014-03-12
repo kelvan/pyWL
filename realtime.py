@@ -3,8 +3,8 @@ import logging
 import operator
 from datetime import datetime
 
-import config
-from database import *
+from pyWL import config
+from pyWL.database import *
 
 logger = logging.getLogger("realtime_api")
 
