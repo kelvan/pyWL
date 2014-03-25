@@ -9,3 +9,4 @@ __pycache__
 key.py
 *.csv
 *.db
+*.[0-9]
