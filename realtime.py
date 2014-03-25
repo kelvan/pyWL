@@ -54,7 +54,8 @@ class Departures(dict):
     @classmethod
     def get_by_stops(cls, stops, disruptions=None):
         if not stops:
-            return []
+            # FIXME
+            return {}
         if isinstance(stops[0], Stop):
             stops = map(lambda st: st['id'], stops)
         c = cls(stops, disruptions)
