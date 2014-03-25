@@ -53,10 +53,18 @@ class Departures(dict):
 
     @classmethod
     def get_by_stops(cls, stops, disruptions=None):
+        if not stops:
+            return []
         if isinstance(stops[0], Stop):
             stops = map(lambda st: st['id'], stops)
         c = cls(stops, disruptions)
         c.refresh()
+        return c
+
+    @classmethod
+    def get_nearby(cls, lat, lon, distance=0.005):
+        stops = Stop.get_nearby(lat, lon, distance)
+        c = cls.get_by_station(stops)
         return c
 
     def refresh(self):
