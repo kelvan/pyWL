@@ -33,7 +33,7 @@ def import_stop_line(info, commit=False):
     s = Stop.get(rbl)
     if s:
         s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'], info['REIHENFOLGE'],
-                   commit)
+                       commit)
     elif rbl:
         print('Stop not found:', rbl)
 
@@ -42,14 +42,14 @@ def import_station(info, commit=False):
     last_changed = datetime.strptime(info['STAND'], dt_format)
     import_commune(info['GEMEINDE_ID'], info['GEMEINDE'])
     s = Station((info['HALTESTELLEN_ID']), info['NAME'], info['TYP'],
-            info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
-            float(info['WGS84_LON'] or '0'), last_changed)
+                 info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
+                 float(info['WGS84_LON'] or '0'), last_changed)
     s.save(commit)
 
 
 def import_line(info, commit=False):
     last_changed = datetime.strptime(info['STAND'], dt_format)
-    l = Line(info['LINIEN_ID'],info['BEZEICHNUNG'], info['ECHTZEIT']=='1',
+    l = Line(info['LINIEN_ID'], info['BEZEICHNUNG'], info['ECHTZEIT'] == '1',
              info['VERKEHRSMITTEL'], last_changed)
     l.save(commit)
 

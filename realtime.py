@@ -8,7 +8,7 @@ from pyWL.database import *
 
 logger = logging.getLogger("realtime_api")
 
-apiurl = "%s/monitor?sender=%s" % (config.baseurl, config.senderid)
+apiurl = "%s/monitor?sender=%s" % (config.realtime_baseurl, config.senderid)
 
 disruption_choices = {'short': 'stoerungkurz', 'long': 'stoerunglang',
                       'elevator': 'aufzugsinfo'}

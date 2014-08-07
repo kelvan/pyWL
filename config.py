@@ -7,7 +7,8 @@ except ImportError:
 
 proj_dir = os.path.dirname(__file__)
 
-baseurl = "http://www.wienerlinien.at/ogd_realtime"
+realtime_baseurl = "http://www.wienerlinien.at/ogd_realtime"
+routing_baseurl = "http://www.wienerlinien.at/ogd_routing/XML_TRIP_REQUEST2"
 senderid= senderid
 
 datetimeformat = '%Y-%m-%dT%H:%M:%S.%f%z'
