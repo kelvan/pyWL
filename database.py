@@ -12,12 +12,13 @@ class Base(dict):
     __tablename__ = None
 
     def __init__(self):
+        if self.__tablename__ is None:
+            raise Exception("Don't use Base class directly")
+
         self['id'] = None
         self.connection = conn
         self.cursor = c
 
-        if self.__tablename__ is None:
-            raise Exception("Don't use Base class directly")
         if not self.table_exists:
             self.create_table()
 
@@ -127,6 +128,7 @@ class Commune(Base, NameMixIn):
         if commit:
             conn.commit()
 
+    # TODO
     def get_stations(self):
         if self['id'] is None:
             return False
@@ -278,8 +280,43 @@ class LineStop(Base):
 
     @classmethod
     def get(cls, lid, sid):
+        r = self.cursor.execute("""SELECT * FROM %s WHERE line_id=? AND stop_id=?""" % cls.__tablename__,
+                                (lid, sid))
+        f = r.fetchone()
+        if f:
+            return cls(*f)
+
+    def delete(self, commit=True):
+        self.cursor.execute("""DELETE FROM %s WHERE line_id=? AND stop_id=?""" % self.__tablename__,
+                            (self['line_id'], self['station_id']))
+        if commit:
+            self.connection.commit()
+
+    def save(self, commit=True):
+        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
+                  (self['line_id'], self['stop_id'], self['direction'],
+                   self['order']))
+
+        if commit:
+            conn.commit()
+
+
+class LineStation(Base):
+    __tablename__ = 'lines_stations'
+    __table_definition__ = '''CREATE TABLE lines_stations (line_id INTEGER NOT NULL,
+                                                           station_id INTEGER NOT NULL,
+                                                           PRIMARY KEY (line_id, station_id))
+                           '''
+
+    def __init__(self, lid, sid):
+        super().__init__()
+        self['line_id'] = lid
+        self['station_id'] = sid
+
+    @classmethod
+    def get(cls, lid, sid):
         r = self.cursor.execute("""SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
-                                (lid,sid))
+                                (lid, sid))
         f = r.fetchone()
         if f:
             return cls(*f)
@@ -292,11 +329,11 @@ class LineStop(Base):
 
     def save(self, commit=True):
         c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
-                  (self['line_id'], self['stop_id'], self['direction'],
-                   self['order']))
+                  (self['line_id'], self['station_id']))
 
         if commit:
             conn.commit()
+
 
 class Stop(Base, LocationMixIn):
     __tablename__ = 'stops'
@@ -338,11 +375,14 @@ class Stop(Base, LocationMixIn):
             conn.commit()
 
     def connect_line(self, lid, direction, order, commit=True):
-        ls = LineStop(lid, self['id'], direction, order)
-        ls.save(commit)
+        line_stop = LineStop(lid, self['id'], direction, order)
+        line_stop.save(commit)
+        line_station = LineStop(lid, self['station_id'])
+        line_station.save(commit)
 
     def disconnect_line(self, lid, commit=True):
-        LineStop.get(lid).delete(commit)
+        LineStop.get(lid, self['id']).delete(commit)
+        LineStation.get(lid, self['station_id']).delete(commit)
 
     def get_station(self):
         return Station(self['station_id'])
