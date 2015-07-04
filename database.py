@@ -328,7 +328,7 @@ class LineStation(Base):
             self.connection.commit()
 
     def save(self, commit=True):
-        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
+        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?)""" % self.__tablename__,
                   (self['line_id'], self['station_id']))
 
         if commit:
@@ -354,8 +354,10 @@ class Stop(Base, LocationMixIn):
         self['lat'] = lat
         self['lon'] = lon
         if isinstance(station, int):
+            self['station_id'] = station
             self['station'] = Station.get(station)
         elif isinstance(station, Station):
+            self['station_id'] = station['id']
             self['station'] = station
         else:
             raise TypeError('station has type {}, has to be Station or int'.format(type(station)))
@@ -377,7 +379,7 @@ class Stop(Base, LocationMixIn):
     def connect_line(self, lid, direction, order, commit=True):
         line_stop = LineStop(lid, self['id'], direction, order)
         line_stop.save(commit)
-        line_station = LineStop(lid, self['station_id'])
+        line_station = LineStation(lid, self['station_id'])
         line_station.save(commit)
 
     def disconnect_line(self, lid, commit=True):
@@ -385,4 +387,4 @@ class Stop(Base, LocationMixIn):
         LineStation.get(lid, self['station_id']).delete(commit)
 
     def get_station(self):
-        return Station(self['station_id'])
+        return self['station']
