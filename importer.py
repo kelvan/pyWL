@@ -12,6 +12,12 @@ station_file = 'wienerlinien-ogd-haltestellen.csv'
 dt_format = "%Y-%m-%d %H:%M:%S"
 
 
+def get_last_changed(info):
+    if info['STAND']:
+        return datetime.strptime(info['STAND'], dt_format)
+    return None
+
+
 def import_commune(cid, name, commit=False):
     c = Commune(cid, name)
     c.save(commit)
@@ -19,7 +25,7 @@ def import_commune(cid, name, commit=False):
 
 def import_stop(info, commit=False):
     rbl = info['RBL_NUMMER']
-    last_changed = datetime.strptime(info['STAND'], dt_format)
+    last_changed = get_last_changed(info)
     s = Stop(info['RBL_NUMMER'], info['STEIG'], info['STEIG_WGS84_LAT'], info['STEIG_WGS84_LON'],
              int(info['FK_HALTESTELLEN_ID']), info['BEREICH'], last_changed)
     if rbl.isdigit():
@@ -39,7 +45,7 @@ def import_stop_line(info, commit=False):
 
 
 def import_station(info, commit=False):
-    last_changed = datetime.strptime(info['STAND'], dt_format)
+    last_changed = get_last_changed(info)
     import_commune(info['GEMEINDE_ID'], info['GEMEINDE'])
     s = Station((info['HALTESTELLEN_ID']), info['NAME'], info['TYP'],
                  info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
@@ -48,7 +54,7 @@ def import_station(info, commit=False):
 
 
 def import_line(info, commit=False):
-    last_changed = datetime.strptime(info['STAND'], dt_format)
+    last_changed = get_last_changed(info)
     l = Line(info['LINIEN_ID'], info['BEZEICHNUNG'], info['ECHTZEIT'] == '1',
              info['VERKEHRSMITTEL'], last_changed)
     l.save(commit)
