@@ -26,8 +26,9 @@ def import_commune(cid, name, commit=False):
 def import_stop(info, commit=False):
     rbl = info['RBL_NUMMER']
     last_changed = get_last_changed(info)
-    s = Stop(info['RBL_NUMMER'], info['STEIG'], info['STEIG_WGS84_LAT'], info['STEIG_WGS84_LON'],
-             int(info['FK_HALTESTELLEN_ID']), info['BEREICH'], last_changed)
+    s = Stop(info['RBL_NUMMER'], info['STEIG'], info['STEIG_WGS84_LAT'],
+             info['STEIG_WGS84_LON'], int(info['FK_HALTESTELLEN_ID']),
+             info['BEREICH'], last_changed)
     if rbl.isdigit():
         s.save(commit)
     elif rbl:
@@ -38,8 +39,8 @@ def import_stop_line(info, commit=False):
     rbl = info['RBL_NUMMER']
     s = Stop.get(rbl)
     if s:
-        s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'], info['REIHENFOLGE'],
-                       commit)
+        s.connect_line(info['FK_LINIEN_ID'], info['RICHTUNG'],
+                       info['REIHENFOLGE'], commit)
     elif rbl:
         print('Stop not found:', rbl)
 
@@ -48,8 +49,8 @@ def import_station(info, commit=False):
     last_changed = get_last_changed(info)
     import_commune(info['GEMEINDE_ID'], info['GEMEINDE'])
     s = Station((info['HALTESTELLEN_ID']), info['NAME'], info['TYP'],
-                 info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
-                 float(info['WGS84_LON'] or '0'), last_changed)
+                info['GEMEINDE_ID'], float(info['WGS84_LAT'] or '0'),
+                float(info['WGS84_LON'] or '0'), last_changed)
     s.save(commit)
 
 

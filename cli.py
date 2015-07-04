@@ -12,11 +12,11 @@ parser = argparse.ArgumentParser(description='WienerLinien test commandline clie
 parser.add_argument(metavar='station name', dest='name')
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-s', '--search', action='store_true',
-                    help='search station by name', dest='search')
+                   help='search station by name', dest='search')
 group.add_argument('-d', '--departures', action='store_true',
-                    help='show departures', dest='deps')
+                   help='show departures', dest='deps')
 group.add_argument('-l', '--line', action='store_true',
-                    help='show stations', dest='line')
+                   help='show stations', dest='line')
 
 args = parser.parse_args()
 

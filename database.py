@@ -1,6 +1,5 @@
 import sqlite3
 from operator import attrgetter, itemgetter
-#import geopy
 
 from pyWL import config
 
@@ -65,7 +64,7 @@ class Base(dict):
 class LocationMixIn:
     @classmethod
     def get_nearby(cls, lat, lon, distance=0.005):
-        #TODO distance in meters
+        # TODO distance in meters
         d = distance
         s = c.execute("""SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
                       (lat-d, lat+d, lon-d, lon+d)).fetchall()
@@ -177,8 +176,8 @@ class Line(Base, NameMixIn):
         r = c.execute(sql.format(Station.__tablename__, Stop.__tablename__, LineStop.__tablename__),
                       (self['id'],)).fetchall()
         if r:
-            h = [Station(*x[:-1]) for x in filter(lambda x: x[-1]=='H', r)]
-            r = [Station(*x[:-1]) for x in filter(lambda x: x[-1]=='R', r)]
+            h = [Station(*x[:-1]) for x in filter(lambda x: x[-1] == 'H', r)]
+            r = [Station(*x[:-1]) for x in filter(lambda x: x[-1] == 'R', r)]
 
             return (h, r)
         else:
@@ -217,7 +216,6 @@ class Station(Base, LocationMixIn, NameMixIn):
             return map(lambda x: cls(*x), a)
         else:
             return []
-
 
     def save(self, commit=True):
         if self['id'] is None:

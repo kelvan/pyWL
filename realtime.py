@@ -35,7 +35,7 @@ class Departures(dict):
 
         if isinstance(disruptions, str):
             disruptions = [disruptions]
-        if not disruptions is None:
+        if disruptions is not None:
             for disruption in disruptions:
                 if disruption in disruption_choices:
                     self.disruptions.append(disruption)
@@ -98,8 +98,9 @@ class Departures(dict):
             stopid = prop['attributes']['rbl']
             station = Stop.get(stopid)['station']
             station_name = station['name']
-            if not station_name in self:
-                self[station_name] = {'name': station_name, 'type': station['type']}
+            if station_name not in self:
+                self[station_name] = {'name': station_name,
+                                      'type': station['type']}
                 self[station_name]['departures'] = []
 
             for line in stop['lines']:
@@ -117,6 +118,3 @@ class Departures(dict):
                         del(line['departures'])
                     deptime['line'] = line
                     self[station_name]['departures'].append(deptime)
-
-        # just for testing
-        #return j
