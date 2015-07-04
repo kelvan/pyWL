@@ -244,15 +244,13 @@ class Station(Base, LocationMixIn, NameMixIn):
 
     def get_lines(self):
         sql = """SELECT DISTINCT lines.*
-                     FROM stations
-                        JOIN stops
-                            ON stations.id=station_id
-                        JOIN lines_stops
-                            ON lines_stops.stop_id=stops.id
-                        JOIN lines
-                            ON lines.id=line_id
-                     WHERE stations.id=?
-                     ORDER BY lines.name"""
+                    FROM stations
+                    JOIN lines_stations
+                        ON lines_stations.station_id=stations.id
+                    JOIN lines
+                        ON lines.id=line_id
+                    WHERE stations.id=?
+                    ORDER BY lines.name"""
         r = self.cursor.execute(sql, (self['id'],))
         f = r.fetchall()
         return [Line(*l) for l in f]
@@ -388,3 +386,16 @@ class Stop(Base, LocationMixIn):
 
     def get_station(self):
         return self['station']
+
+    def get_lines(self):
+        sql = """SELECT DISTINCT lines.*
+                    FROM stops
+                    JOIN lines_stops
+                        ON lines_stops.stop_id=stops.id
+                    JOIN lines
+                        ON lines.id=line_id
+                    WHERE stops.id=?
+                    ORDER BY lines.name"""
+        r = self.cursor.execute(sql, (self['id'],))
+        f = r.fetchall()
+        return [Line(*l) for l in f]
