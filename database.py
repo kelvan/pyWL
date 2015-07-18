@@ -140,27 +140,38 @@ class Line(Base, NameMixIn):
                                                   realtime BOOLEAN,
                                                   type VARCHAR(10),
                                                   last_changed DATETIME,
+                                                  colour INT(12),
+                                                  logo BLOB,
                                                   PRIMARY KEY (id),
                                                   CHECK (realtime IN (0, 1)))"""
 
-    def __init__(self, lid, name, realtime, typ, last_changed):
+    def __init__(self, lid, name, realtime, typ, last_changed, colour=None, logo=None):
         super().__init__()
         self['id'] = lid
         self['name'] = name
         self['realtime'] = realtime
         self['type'] = typ
         self['last_changed'] = last_changed
+        self['colour'] = colour
+        self['logo'] = logo
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
-                      (self['name'], self['realtime'], self['typ'], self['last_changed']))
+            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
+                      (self['name'], self['realtime'], self['typ'], self['last_changed'],
+                       self['colour'], self['logo']))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?)""" % self.__tablename__,
-                      (self['id'], self['name'], self['realtime'], self['type'], self['last_changed']))
+            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
+                      (self['id'], self['name'], self['realtime'], self['type'],
+                       self['last_changed'], self['colour'], self['logo']))
 
         if commit:
             conn.commit()
+
+    @property
+    def hex_colour(self):
+        if self['colour']:
+            return hex(self['colour'])
 
     def get_stations(self):
         if self['id'] is None:

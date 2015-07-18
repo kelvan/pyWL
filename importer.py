@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import re
 import csv
 from datetime import datetime
 
@@ -10,6 +11,13 @@ stop_file = 'wienerlinien-ogd-steige.csv'
 station_file = 'wienerlinien-ogd-haltestellen.csv'
 
 dt_format = "%Y-%m-%d %H:%M:%S"
+
+# importer use first matching colour
+COLOURS = (
+    (re.compile('S.+'), 0x2d1d8f), ('U1', 0xe4121d), ('U2', 0xa349a4),
+    ('U3', 0xff7f27), ('U4', 0x22b14c), ('U5', 0x00bfbf), ('U6', 0xa76745)
+)
+
 
 
 def get_last_changed(info):
@@ -56,8 +64,17 @@ def import_station(info, commit=False):
 
 def import_line(info, commit=False):
     last_changed = get_last_changed(info)
+
+    name = info['BEZEICHNUNG']
+    line_colour = None
+    for colour_check, colour in COLOURS:
+        if hasattr(colour_check, 'match') and colour_check.match(name) or\
+              colour_check == name:
+            line_colour = colour
+            break
+
     l = Line(info['LINIEN_ID'], info['BEZEICHNUNG'], info['ECHTZEIT'] == '1',
-             info['VERKEHRSMITTEL'], last_changed)
+             info['VERKEHRSMITTEL'], last_changed, line_colour)
     l.save(commit)
 
 
