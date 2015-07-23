@@ -171,7 +171,7 @@ class Line(Base, NameMixIn):
     @property
     def hex_colour(self):
         if self['colour']:
-            return hex(self['colour'])
+            return str(hex(self['colour'])).replace('0x', '#')
 
     def get_stations(self):
         if self['id'] is None:
