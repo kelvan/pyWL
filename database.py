@@ -77,11 +77,9 @@ class LocationMixIn:
 class NameMixIn:
     @classmethod
     def get_by_name(cls, name):
-        r = c.execute("""SELECT * FROM %s WHERE name = ?""" % cls.__tablename__,
-                                (name,))
-        f = r.fetchone()
-        if f:
-            return cls(*f)
+        results = cls.search_by_name(name, exact=True)
+        if len(results) == 1:
+            return results[0]
 
     @classmethod
     def search_by_name(cls, name, exact=False, weight=None):
