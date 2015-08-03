@@ -118,7 +118,7 @@ class Departures(dict):
                         del(line['departures'])
                     deptime['line'] = line
                     line_db = Line.get_by_name(line['name'])
-                    if db_line:
+                    if line_db:
                         line['colour'] = Line.get_by_name(line['name']).hex_colour
                     else:
                         # Line not found in DB
