@@ -1,8 +1,9 @@
 import sqlite3
 from operator import attrgetter, itemgetter
 
-from pyWL import config
+import config
 
+# XXX
 conn = sqlite3.connect(config.database)
 c = conn.cursor()
 
@@ -74,12 +75,46 @@ class LocationMixIn:
             return []
 
 
+def guess_line(lines):
+    """ Extract best match from lines with same name
+    e.g. tram and bus with name '1' extracts the tram
+
+    :return: single Line
+    """
+    name = lines[0]['name']
+    line_type = None
+
+    static_mapping = {'VRT': 'ptTramVRT', 'WLB': 'ptTramWLB', 'O': 'ptTram', 'D': 'ptTram'}
+
+    if name in static_mapping:
+        line_type = static_mapping[name]
+    elif name.endswith('A') or name.endswith('B'):
+        line_type = 'ptBusCity'
+    elif name.startswith('N'):
+        line_type = 'ptBusNight'
+    elif name.startswith('U'):
+        line_type = 'ptMetro'
+    elif name.startswith('S'):
+        line_type = 'ptTrainS'
+    elif name.isdigit():
+        # no regional bus lines supported
+        line_type = 'ptTram'
+
+    for line in lines:
+        if line['type'] == line_type:
+            return line
+
+
 class NameMixIn:
+
     @classmethod
     def get_by_name(cls, name):
         results = cls.search_by_name(name, exact=True)
+
         if len(results) == 1:
             return results[0]
+        if len(results) > 1:
+            return guess_line(results)
 
     @classmethod
     def search_by_name(cls, name, exact=False, weight=None):
@@ -285,7 +320,7 @@ class LineStop(Base):
 
     @classmethod
     def get(cls, lid, sid):
-        r = self.cursor.execute("""SELECT * FROM %s WHERE line_id=? AND stop_id=?""" % cls.__tablename__,
+        r = c.execute("""SELECT * FROM %s WHERE line_id=? AND stop_id=?""" % cls.__tablename__,
                                 (lid, sid))
         f = r.fetchone()
         if f:
@@ -320,7 +355,7 @@ class LineStation(Base):
 
     @classmethod
     def get(cls, lid, sid):
-        r = self.cursor.execute("""SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
+        r = c.execute("""SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
                                 (lid, sid))
         f = r.fetchone()
         if f:

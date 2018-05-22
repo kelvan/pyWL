@@ -10,3 +10,5 @@ key.py
 *.csv
 *.db
 *.[0-9]
+.idea/
+env/

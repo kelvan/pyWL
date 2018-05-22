@@ -4,9 +4,9 @@ import argparse
 import sys
 from operator import itemgetter
 
-from pyWL.realtime import Departures
-from pyWL.database import Station, Line
-from pyWL.textformat import *
+from pywl.realtime import Departures
+from db.database import Station, Line
+from ui.textformat import inblue, ingreen, inred
 
 parser = argparse.ArgumentParser(description='WienerLinien test commandline client')
 parser.add_argument(metavar='station name', dest='name')
@@ -28,9 +28,9 @@ if args.search:
 
 if args.line:
     name = args.name.upper()
-    l = Line.get_by_name(name)
+    line = Line.get_by_name(name)
 
-    if l is None:
+    if line is None:
         s = Line.search_by_name(name)
         print('Line not found')
         if s:
@@ -40,11 +40,11 @@ if args.line:
         sys.exit(1)
     else:
         i = 1
-        for direction in l.get_stations():
+        for direction in line.get_stations():
             print()
-            print('-'*12)
+            print('-' * 12)
             print(inred('Direction:'), i)
-            print('-'*12)
+            print('-' * 12)
             print()
             i += 1
             for station in direction:
@@ -59,9 +59,9 @@ if args.deps:
 
     for station in sorted(deps.values(), key=itemgetter('name')):
         print()
-        print('='*len(station['name']))
+        print('=' * len(station['name']))
         print(ingreen(station['name']))
-        print('='*len(station['name']))
+        print('=' * len(station['name']))
 
         for departure in sorted(station['departures'], key=itemgetter('countdown')):
             dep_text = departure['line']['name'].ljust(6)

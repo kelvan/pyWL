@@ -3,17 +3,17 @@ import logging
 import operator
 from datetime import datetime
 
-from pyWL import config
-from pyWL.database import *
+import config
+from db.database import Stop, Station, Line
 
-logger = logging.getLogger("realtime_api")
+logger = logging.getLogger(__name__)
 
-apiurl = "%s/monitor?sender=%s" % (config.realtime_baseurl, config.senderid)
+apiurl = '{config.realtime_baseurl}/monitor?sender={config.senderid}'.format(config=config)
 
 disruption_choices = {'short': 'stoerungkurz', 'long': 'stoerunglang',
                       'elevator': 'aufzugsinfo'}
-traf_option = "activateTrafficInfo"
-position_option = "rbl"
+traf_option = 'activateTrafficInfo'
+position_option = 'rbl'
 
 
 def datify(date_string):
@@ -21,6 +21,7 @@ def datify(date_string):
 
 
 class Departures(dict):
+
     def __init__(self, positions, disruptions=None):
         """ position: rbl as int or iterable
             disruptions: get disruption info ['short', 'long', 'elevator']
@@ -40,7 +41,7 @@ class Departures(dict):
                 if disruption in disruption_choices:
                     self.disruptions.append(disruption)
                 else:
-                    logger.error("invalid disruption type: %s", disruption)
+                    logger.error('invalid disruption type: %s', disruption)
 
     @classmethod
     def get_by_station(cls, station, disruptions=None):
@@ -69,18 +70,19 @@ class Departures(dict):
         return c
 
     def refresh(self):
+        # XXX too complex
         request_url = apiurl
 
         for position in self.postitions:
             if isinstance(position, Stop):
                 position = position['id']
-            request_url += "&%s=%d" % (position_option, position)
+            request_url += '&%s=%d' % (position_option, position)
 
         for disruption in self.disruptions:
-            request_url += "&%s=%s" % (traf_option,
+            request_url += '&%s=%s' % (traf_option,
                                        disruption_choices[disruption])
 
-        logger.debug("processing %s", request_url)
+        logger.debug('processing %s', request_url)
         r = requests.get(request_url)
 
         if not r.status_code == 200:

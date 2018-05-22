@@ -1,16 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import re
 import csv
 from datetime import datetime
 
-from pyWL.database import *
+from .database import Commune, Stop, Station, Line, conn
 
 line_file = 'wienerlinien-ogd-linien.csv'
 stop_file = 'wienerlinien-ogd-steige.csv'
 station_file = 'wienerlinien-ogd-haltestellen.csv'
 
-dt_format = "%Y-%m-%d %H:%M:%S"
+DT_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 # importer use first matching colour
 COLOURS = (
@@ -19,10 +19,9 @@ COLOURS = (
 )
 
 
-
 def get_last_changed(info):
     if info['STAND']:
-        return datetime.strptime(info['STAND'], dt_format)
+        return datetime.strptime(info['STAND'], DT_FORMAT)
     return None
 
 

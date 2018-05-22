@@ -1,2 +1,2 @@
-requests
-geopy
+requests~=2.18.4
+#geopy~=1.14.0

@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
-
-import sys
 import unittest
 from requests import Response
 import json
+from pathlib import Path
 
-sys.path.insert(0, '..')
-import realtime
-from textformat import *
+from pywl import realtime
 
 
 def json_loads_stub(content):
@@ -15,6 +11,7 @@ def json_loads_stub(content):
         return json.loads(content)
 
     return stub
+
 
 def requests_get_stub(json, status_code):
     def stub(url):
@@ -27,11 +24,15 @@ def requests_get_stub(json, status_code):
 
     return stub
 
+
 class ParsingTestCase(unittest.TestCase):
+
     def setUp(self):
-        with open('data/singlestation.json') as f:
+        data_dir = Path(__file__).parent / 'data'
+
+        with open(data_dir / 'singlestation.json') as f:
             self.single_station_json = f.read()
-        with open('data/multistation.json') as f:
+        with open(data_dir / 'multistation.json') as f:
             self.multi_station_json = f.read()
 
     def testParsingSingleStation(self):
@@ -40,15 +41,22 @@ class ParsingTestCase(unittest.TestCase):
 
         d.refresh()
 
-        self.assertIn('Karlsplatz', d.keys(), inred('Stationname not found'))
-        self.assertEqual(22, len(d['Karlsplatz']['departures']), inred('wrong departure count'))
+        self.assertEqual(1, len(d.keys()))
+        self.assertIn('Karlsplatz', d.keys(), 'Stationname not found')
+        self.assertEqual(22, len(d['Karlsplatz']['departures']), 'wrong departure count')
 
     def testParsingMultipleStations(self):
         realtime.requests.get = requests_get_stub(self.multi_station_json, 200)
         d = realtime.Departures(0)
         d.refresh()
 
-        self.assertTrue(False, inblue('TODO'))
+        self.assertEqual(7, len(d.keys()))
+        stations = [
+            'Erzherzog-Karl-Straße', 'Karlsplatz', 'Ring/Volkstheater U', 'Karl-Meißl-Straße', 'Karl-Bekehrty-Str.',
+            'Karl-Schwed-Gasse', 'Karl-Popper-Straße']
+        self.assertAlmostEqual(stations, list(d.keys()))
+        self.assertEqual(22, len(d['Karlsplatz']['departures']), 'wrong departure count')
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
