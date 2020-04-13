@@ -62,7 +62,7 @@ class Departures(dict):
             # FIXME
             return {}
         if isinstance(stops[0], Stop):
-            stops = map(lambda st: st['id'], stops)
+            stops = list(map(lambda st: st['id'], stops))
         c = cls(stops, disruptions)
         c.refresh()
         return c
