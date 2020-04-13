@@ -8,7 +8,7 @@ from db.database import Stop, Station, Line
 
 logger = logging.getLogger(__name__)
 
-apiurl = '{config.realtime_baseurl}/monitor?sender={config.senderid}'.format(config=config)
+apiurl = '{config.realtime_baseurl}/monitor?'.format(config=config)
 
 disruption_choices = {'short': 'stoerungkurz', 'long': 'stoerunglang',
                       'elevator': 'aufzugsinfo'}

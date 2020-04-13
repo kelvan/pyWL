@@ -1,10 +1,5 @@
 import os
 
-try:
-    from key import senderid
-except ImportError:
-    from key import senderid_dev as senderid
-
 proj_dir = os.path.dirname(__file__)
 
 realtime_baseurl = 'https://www.wienerlinien.at/ogd_realtime'
