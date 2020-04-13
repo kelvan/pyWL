@@ -8,7 +8,7 @@ from db.database import Stop, Station, Line
 
 logger = logging.getLogger(__name__)
 
-apiurl = '{config.realtime_baseurl}/monitor?'.format(config=config)
+apiurl = '{config.realtime_baseurl}/monitor'.format(config=config)
 
 disruption_choices = {'short': 'stoerungkurz', 'long': 'stoerunglang',
                       'elevator': 'aufzugsinfo'}
@@ -30,16 +30,20 @@ class Departures(dict):
         self.last_updated = None
 
         if isinstance(positions, int):
-            self.postitions = [positions]
+            self.positions = [positions]
         else:
-            self.postitions = positions
+            self.positions = positions
+
+        for position in self.positions:
+            if isinstance(position, Stop):
+                position = position['id']
 
         if isinstance(disruptions, str):
             disruptions = [disruptions]
         if disruptions is not None:
             for disruption in disruptions:
                 if disruption in disruption_choices:
-                    self.disruptions.append(disruption)
+                    self.disruptions.append(disruption_choices[disruption])
                 else:
                     logger.error('invalid disruption type: %s', disruption)
 
@@ -71,19 +75,11 @@ class Departures(dict):
 
     def refresh(self):
         # XXX too complex
-        request_url = apiurl
+        params = { position_option : self.positions }
+        if len(self.disruptions) > 0:
+            params[traf_option] = self.disruptions
 
-        for position in self.postitions:
-            if isinstance(position, Stop):
-                position = position['id']
-            request_url += '&%s=%d' % (position_option, position)
-
-        for disruption in self.disruptions:
-            request_url += '&%s=%s' % (traf_option,
-                                       disruption_choices[disruption])
-
-        logger.debug('processing %s', request_url)
-        r = requests.get(request_url)
+        r = requests.get(apiurl, params=params )
 
         if not r.status_code == 200:
             logger.error('unable to fetch data, statuscode: %d', r.status_code)
