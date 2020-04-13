@@ -67,14 +67,14 @@ def import_line(info, commit=False):
     name = info['BEZEICHNUNG']
     line_colour = None
     for colour_check, colour in COLOURS:
-        if hasattr(colour_check, 'match') and colour_check.match(name) or\
-              colour_check == name:
+        if hasattr(colour_check, 'match') and colour_check.match(name) or \
+                colour_check == name:
             line_colour = colour
             break
 
-    l = Line(info['LINIEN_ID'], info['BEZEICHNUNG'], info['ECHTZEIT'] == '1',
-             info['VERKEHRSMITTEL'], last_changed, line_colour)
-    l.save(commit)
+    line = Line(info['LINIEN_ID'], info['BEZEICHNUNG'], info['ECHTZEIT'] == '1',
+                info['VERKEHRSMITTEL'], last_changed, line_colour)
+    line.save(commit)
 
 
 with open(line_file, 'r') as f:

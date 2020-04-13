@@ -29,8 +29,9 @@ class Base(dict):
     def get(cls, cid):
         """ fetch element by id, returns as dict-like object
         """
-        r = c.execute("""SELECT * FROM %s WHERE id = ?""" % cls.__tablename__,
-                                (cid,))
+        r = c.execute(
+            """SELECT * FROM %s WHERE id = ?""" % cls.__tablename__,
+            (cid,))
         f = r.fetchone()
         if f:
             return cls(*f)
@@ -44,8 +45,9 @@ class Base(dict):
             return []
 
     def delete(self, commit=True):
-        self.cursor.execute("""DELETE FROM %s WHERE id=?""" % self.__tablename__,
-                            (self['id'],))
+        self.cursor.execute(
+            """DELETE FROM %s WHERE id=?""" % self.__tablename__,
+            (self['id'],))
         if commit:
             self.connection.commit()
 
@@ -67,8 +69,9 @@ class LocationMixIn:
     def get_nearby(cls, lat, lon, distance=0.005):
         # TODO distance in meters
         d = distance
-        s = c.execute("""SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
-                      (lat-d, lat+d, lon-d, lon+d)).fetchall()
+        s = c.execute(
+            """SELECT * FROM %s WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?""" % cls.__tablename__,
+            (lat - d, lat + d, lon - d, lon + d)).fetchall()
         if s:
             return map(lambda x: cls(*x), s)
         else:
@@ -119,11 +122,13 @@ class NameMixIn:
     @classmethod
     def search_by_name(cls, name, exact=False, weight=None):
         if exact:
-            s = c.execute("""SELECT * FROM %s WHERE name == ? COLLATE NOCASE""" % cls.__tablename__,
-                          (name,)).fetchall()
+            s = c.execute(
+                """SELECT * FROM %s WHERE name == ? COLLATE NOCASE""" % cls.__tablename__,
+                (name,)).fetchall()
         else:
-            s = c.execute("""SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
-                          ('%'+name+'%',)).fetchall()
+            s = c.execute(
+                """SELECT * FROM %s WHERE name LIKE ? COLLATE NOCASE""" % cls.__tablename__,
+                ('%' + name + '%',)).fetchall()
 
         if s:
             result = [cls(*x) for x in s]
@@ -151,11 +156,13 @@ class Commune(Base, NameMixIn):
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?)""" % self.__tablename__,
-                      (self['name'],))
+            c.execute(
+                """INSERT INTO %s VALUES (?)""" % self.__tablename__,
+                (self['name'],))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?, ?)""" % self.__tablename__,
-                      (self['id'], self['name']))
+            c.execute(
+                """INSERT OR REPLACE INTO %s VALUES (?, ?)""" % self.__tablename__,
+                (self['id'], self['name']))
 
         if commit:
             conn.commit()
@@ -253,8 +260,9 @@ class Station(Base, LocationMixIn, NameMixIn):
 
     @classmethod
     def get_by_commune(cls, cid):
-        r = c.execute("""SELECT id, name, commune_id, lat, lon, last_changed FROM %s WHERE commune_id=?""" % cls.__tablename__,
-                      (cid,))
+        r = c.execute(
+            """SELECT id, name, commune_id, lat, lon, last_changed FROM %s WHERE commune_id=?""" % cls.__tablename__,
+            (cid,))
         a = r.fetchall()
         if a:
             return map(lambda x: cls(*x), a)
@@ -263,22 +271,25 @@ class Station(Base, LocationMixIn, NameMixIn):
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
-                      (self['name'], self['type'], self['commune_id'],
-                       self['lat'], self['lon'],
-                       self['last_changed']))
+            c.execute(
+                """INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
+                (self['name'], self['type'], self['commune_id'],
+                self['lat'], self['lon'],
+                self['last_changed']))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
-                      (self['id'], self['name'], self['type'],
-                       self['commune_id'], self['lat'], self['lon'],
-                       self['last_changed']))
+            c.execute(
+                """INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
+                (self['id'], self['name'], self['type'],
+                self['commune_id'], self['lat'], self['lon'],
+                self['last_changed']))
 
         if commit:
             conn.commit()
 
     def get_stops(self):
-        r = c.execute("""SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
-                      (self['id'],)).fetchall()
+        r = c.execute(
+            """SELECT * FROM %s WHERE station_id=?""" % Stop.__tablename__,
+            (self['id'],)).fetchall()
         if r:
             return [Stop(*x) for x in r]
         else:
@@ -320,22 +331,25 @@ class LineStop(Base):
 
     @classmethod
     def get(cls, lid, sid):
-        r = c.execute("""SELECT * FROM %s WHERE line_id=? AND stop_id=?""" % cls.__tablename__,
-                                (lid, sid))
+        r = c.execute(
+            """SELECT * FROM %s WHERE line_id=? AND stop_id=?""" % cls.__tablename__,
+            (lid, sid))
         f = r.fetchone()
         if f:
             return cls(*f)
 
     def delete(self, commit=True):
-        self.cursor.execute("""DELETE FROM %s WHERE line_id=? AND stop_id=?""" % self.__tablename__,
-                            (self['line_id'], self['station_id']))
+        self.cursor.execute(
+            """DELETE FROM %s WHERE line_id=? AND stop_id=?""" % self.__tablename__,
+            (self['line_id'], self['station_id']))
         if commit:
             self.connection.commit()
 
     def save(self, commit=True):
-        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
-                  (self['line_id'], self['stop_id'], self['direction'],
-                   self['order']))
+        c.execute(
+            """INSERT OR REPLACE INTO %s VALUES (?,?,?,?)""" % self.__tablename__,
+            (self['line_id'], self['stop_id'], self['direction'],
+            self['order']))
 
         if commit:
             conn.commit()
@@ -355,21 +369,24 @@ class LineStation(Base):
 
     @classmethod
     def get(cls, lid, sid):
-        r = c.execute("""SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
-                                (lid, sid))
+        r = c.execute(
+            """SELECT * FROM %s WHERE line_id=? AND station_id=?""" % cls.__tablename__,
+            (lid, sid))
         f = r.fetchone()
         if f:
             return cls(*f)
 
     def delete(self, commit=True):
-        self.cursor.execute("""DELETE FROM %s WHERE line_id=? AND station_id=?""" % self.__tablename__,
-                            (self['line_id'], self['station_id']))
+        self.cursor.execute(
+            """DELETE FROM %s WHERE line_id=? AND station_id=?""" % self.__tablename__,
+            (self['line_id'], self['station_id']))
         if commit:
             self.connection.commit()
 
     def save(self, commit=True):
-        c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?)""" % self.__tablename__,
-                  (self['line_id'], self['station_id']))
+        c.execute(
+            """INSERT OR REPLACE INTO %s VALUES (?,?)""" % self.__tablename__,
+            (self['line_id'], self['station_id']))
 
         if commit:
             conn.commit()
@@ -406,13 +423,15 @@ class Stop(Base, LocationMixIn):
 
     def save(self, commit=True):
         if self['id'] is None:
-            c.execute("""INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
-                      (self['name'], self['lat'], self['lon'], self['station']['id'],
-                       self['section'], self['last_changed']))
+            c.execute(
+                """INSERT INTO %s VALUES (?,?,?,?,?,?)""" % self.__tablename__,
+                (self['name'], self['lat'], self['lon'], self['station']['id'],
+                self['section'], self['last_changed']))
         else:
-            c.execute("""INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
-                      (self['id'], self['name'], self['lat'], self['lon'],
-                       self['station']['id'], self['section'], self['last_changed']))
+            c.execute(
+                """INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?)""" % self.__tablename__,
+                (self['id'], self['name'], self['lat'], self['lon'],
+                self['station']['id'], self['section'], self['last_changed']))
         if commit:
             conn.commit()
 

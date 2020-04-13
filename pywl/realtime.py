@@ -75,11 +75,11 @@ class Departures(dict):
 
     def refresh(self):
         # XXX too complex
-        params = { position_option : self.positions }
+        params = {position_option: self.positions}
         if len(self.disruptions) > 0:
             params[traf_option] = self.disruptions
 
-        r = requests.get(apiurl, params=params )
+        r = requests.get(apiurl, params=params)
 
         if not r.status_code == 200:
             logger.error('unable to fetch data, statuscode: %d', r.status_code)
